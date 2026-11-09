@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>I.M.M.A. · Coordenadoria de Jovens</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg">
+<meta name="theme-color" content="#007535">
+<style>
+:root{--g:#007535;--r:#d6002a;--o:#cdb44e;--bg:#f6f4ec;--card:#fff;--tx:#1d2a22;--mut:#66726a;--bd:#e3dfd0;box-sizing:border-box;padding:env(safe-area-inset-top,0) 0 env(safe-area-inset-bottom,0)}
+@media (prefers-color-scheme:dark){:root{--bg:#0f1a14;--card:#16241c;--tx:#eef2ec;--mut:#9fb0a5;--bd:#2a3d31;--g:#1fa35a}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{background:var(--g);color:#fff;border-bottom:4px solid var(--o)}
+.hd{max-width:960px;margin:auto;padding:14px 16px;display:flex;align-items:center;gap:12px}.hd img{width:44px;height:44px}.hd div{flex:1}.hd small{display:block;opacity:.85}
+nav{max-width:960px;margin:auto;padding:0 16px;display:flex;gap:6px}nav button{border:0;background:none;color:#fff;opacity:.8;padding:10px 14px;font:inherit;font-weight:600;border-bottom:3px solid transparent;cursor:pointer}nav button.on{opacity:1;border-color:var(--o)}
+main{max-width:960px;margin:auto;padding:16px}.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:18px;margin-bottom:16px}
+h2{margin:0 0 12px;font-size:18px;color:var(--g)}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+label{display:block;font-size:13px;font-weight:600;color:var(--mut);margin-bottom:4px}
+input,select{width:100%;padding:10px 12px;border:1px solid var(--bd);border-radius:10px;background:var(--bg);color:var(--tx);font:inherit}input:focus,select:focus{outline:2px solid var(--o)}
+.btn{background:var(--r);color:#fff;border:0;border-radius:10px;padding:12px 20px;font:inherit;font-weight:700;cursor:pointer}.btn.ghost{background:none;color:var(--g);border:1px solid var(--g)}
+.msg{padding:10px 14px;border-radius:10px;margin-top:12px;background:var(--bg);border-left:4px solid var(--g)}.hide{display:none!important}
+.chip{display:inline-block;margin:2px 4px 2px 0;padding:3px 10px;border:1px solid var(--g);border-radius:14px;color:var(--g);font-size:13px;text-decoration:none}
+table{width:100%;border-collapse:collapse}td{padding:8px;border-bottom:1px solid var(--bd);vertical-align:top}.nm{color:var(--g);text-decoration:none}
+dialog{max-width:640px;width:calc(100% - 32px);border:1px solid var(--bd);border-radius:14px;background:var(--card);color:var(--tx)}
+</style>
+</head>
+<body>
+<header>
+<div class="hd"><img src="icon.svg" alt=""><div><b>I.M.M.A. · Coordenadoria de Jovens</b><small id="quem">Ficha de Cadastramento Individual</small></div><button id="sair" class="btn ghost hide" style="color:#fff;border-color:#fff">Sair</button></div>
+<nav id="nav" class="hide"><button data-v="v1" class="on">Cadastro</button><button data-v="v2" id="nv2" class="hide">Jovens</button></nav>
+</header>
+<main>
+<section id="auth" class="card"><h2>Entrar</h2>
+<div class="grid"><div><label for="em">Email</label><input id="em" type="email" autocomplete="email"></div><div><label for="pw">Palavra-passe</label><input id="pw" type="password" autocomplete="current-password"></div></div>
+<p><button id="ent" class="btn">Entrar</button> <button id="cri" class="btn ghost">Criar conta</button></p><div id="am" class="msg hide"></div></section>
+<section id="v1" class="card hide"><h2>A minha ficha</h2><div id="ff" class="grid"></div><p><button id="sv" class="btn">Guardar ficha</button></p><div id="fm" class="msg hide"></div></section>
+<section id="v2" class="hide"><div class="card"><h2>Jovens</h2><label for="sq">Pesquisar (nome, língua, habilitação, formação, função, igreja…)</label><input id="sq" placeholder="ex.: português"><p id="cnt" style="color:var(--mut)"></p><table><tbody id="tb"></tbody></table></div></section>
+<dialog id="dg"><h2 id="dt"></h2><div id="db"></div><p><button class="btn ghost" id="dx">Fechar</button></p></dialog>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script>
+const SUPABASE_URL='COLE_AQUI_O_URL_DO_PROJECTO', SUPABASE_KEY='COLE_AQUI_A_ANON_KEY';
+const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+const $=i=>document.getElementById(i);
+const esc=s=>{const d=document.createElement('div');d.textContent=s??'';return d.innerHTML.replace(/"/g,'&quot;')};
+const nz=s=>String(s??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+const PROV=['Bengo','Benguela','Bié','Cabinda','Cuando','Cubango','Cuanza Norte','Cuanza Sul','Cunene','Huambo','Huíla','Icolo e Bengo','Luanda','Lunda Norte','Lunda Sul','Malanje','Moxico','Moxico Leste','Namibe','Uíge','Zaire'];
+const REDES=['WhatsApp','Facebook','Instagram','TikTok','YouTube','Telegram','X (Twitter)'];
+const NOME={membro:'Membro',igreja:'Líder da igreja',regiao:'Líder da região',provincia:'Líder provincial',admin:'Administrador geral'};
+const TOP=['nome','prov','reg','igr'];
+const F=[['nome','Nome completo','t'],['nasc','Data de nascimento','d'],['tel','Telefone','tel'],['email','Email','email'],['prov','Província','s',PROV],['mun','Município','t'],['bairro','Bairro','t'],['reg','Região','t'],['igr','Igreja','t'],['func','Função na igreja','t'],['hab','Habilitação literária','s',['Ensino de Base','Ensino Médio','Bacharelado','Licenciado','Mestre','PhD']],['fprof','Formação profissional','t'],['lin','Línguas (separe por vírgulas)','t']];
+let me=null,perfil={papel:'membro'};
+$('ff').innerHTML=F.map(([k,l,t,o])=>`<div><label for="f_${k}">${l}</label>${t=='s'?`<select id="f_${k}"><option></option>${o.map(x=>`<option>${x}</option>`).join('')}</select>`:`<input id="f_${k}" type="${t=='d'?'date':t=='tel'?'tel':t=='email'?'email':'text'}">`}</div>`).join('')+REDES.map(r=>`<div><label for="r_${r}">${r}</label><input id="r_${r}" placeholder="nome ou link"></div>`).join('');
+const val=(m,k)=>{const v=TOP.includes(k)?m[k]:(m.dados||{})[k];return Array.isArray(v)?v.join(', '):(v??'')};
+function colher(){const o={dados:{}};F.forEach(([k])=>{const v=$('f_'+k).value.trim();if(TOP.includes(k))o[k]=v;else if(v)o.dados[k]=v});o.dados.lin=(o.dados.lin||'').split(',').map(s=>s.trim()).filter(Boolean);o.dados.redes={};REDES.forEach(n=>{const v=$('r_'+n).value.trim();if(v)o.dados.redes[n]=v});return o}
+function preencher(m){F.forEach(([k])=>$('f_'+k).value=val(m,k));REDES.forEach(n=>$('r_'+n).value=((m.dados||{}).redes||{})[n]||'')}
+$('sv').onclick=async()=>{const m=$('fm');m.classList.remove('hide');const o=colher();if(!o.nome||!o.prov){m.textContent='Preencha o nome e a província.';return}const{error}=await sb.from('membros').upsert({...o,user_id:me.id,editado:new Date().toISOString()},{onConflict:'user_id'});m.textContent=error?'Não foi possível guardar: '+error.message:'Ficha guardada.'};
+const lk=(u,t)=>`<a class="chip" href="${esc(u)}" target="_blank" rel="noopener">${esc(t)}</a>`;
+function wa(m){const d=m.dados||{};let v=(d.redes||{}).WhatsApp||d.tel||'';if(/^https?:\/\//i.test(v))return v;v=v.replace(/\D/g,'');if(v.length==9)v='244'+v;return v.length>=8?'https://wa.me/'+v:''}
+function nu(n,v){v=(v||'').trim();if(/^https?:\/\//i.test(v))return v;const u=v.replace(/^@/,''),e=encodeURIComponent(u),ok=u&&!/\s/.test(u);return{Instagram:ok&&'https://www.instagram.com/'+e,TikTok:ok&&'https://www.tiktok.com/@'+e,'X (Twitter)':ok&&'https://x.com/'+e,Telegram:ok&&'https://t.me/'+e,Facebook:u&&(ok?'https://www.facebook.com/'+e:'https://www.facebook.com/search/top?q='+e),YouTube:u&&'https://www.youtube.com/results?search_query='+e}[n]||''}
+function chips(m){const d=m.dados||{};let h='';if(d.tel)h+=lk('tel:'+d.tel.replace(/[^\d+]/g,''),'Ligar');const w=wa(m);if(w)h+=lk(w,'WhatsApp');for(const[n,v]of Object.entries(d.redes||{})){if(n=='WhatsApp')continue;const u=nu(n,v);if(u)h+=lk(u,n)}return h}
+let lista=[],vis=[];
+async function carregar(){const{data}=await sb.from('membros').select('*').order('nome');lista=data||[];desenhar()}
+function desenhar(){const q=nz($('sq').value);vis=lista.filter(m=>!q||nz(JSON.stringify([m.nome,m.prov,m.reg,m.igr,m.dados])).includes(q));$('cnt').textContent=vis.length+' jovens';$('tb').innerHTML=vis.slice(0,300).map((m,i)=>`<tr><td><a href="#" class="nm" data-i="${i}"><b>${esc(m.nome)}</b></a><br><small style="color:var(--mut)">${esc(m.igr)} · ${esc(m.prov)}</small></td><td>${chips(m)}</td></tr>`).join('')||'<tr><td>Nenhum resultado.</td></tr>'}
+$('sq').oninput=desenhar;
+document.addEventListener('click',e=>{const a=e.target.closest('.nm');if(!a)return;e.preventDefault();const m=vis[+a.dataset.i];$('dt').textContent=m.nome;$('db').innerHTML=F.filter(f=>val(m,f[0])!=='').map(f=>`<p style="margin:4px 0"><b>${f[1]}:</b> ${esc(val(m,f[0]))}</p>`).join('')+'<p>'+chips(m)+'</p>';$('dg').showModal()});
+$('dx').onclick=()=>$('dg').close();
+function mostrar(v){['v1','v2'].forEach(x=>$(x).classList.toggle('hide',x!=v));document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('on',b.dataset.v==v))}
+document.querySelectorAll('#nav button').forEach(b=>b.onclick=()=>mostrar(b.dataset.v));
+async function entrar(novo){const m=$('am');m.classList.remove('hide');const c={email:$('em').value.trim(),password:$('pw').value};const r=novo?await sb.auth.signUp(c):await sb.auth.signInWithPassword(c);m.textContent=r.error?r.error.message:(novo&&!r.data.session?'Conta criada. Confirme o email e depois entre.':'')}
+$('ent').onclick=()=>entrar(false);$('cri').onclick=()=>entrar(true);$('sair').onclick=()=>sb.auth.signOut();
+async function sessao(s){me=s?.user||null;['auth'].forEach(x=>$(x).classList.toggle('hide',!!me));$('nav').classList.toggle('hide',!me);$('sair').classList.toggle('hide',!me);if(!me){mostrar('');return}
+const{data}=await sb.from('perfis').select('*').eq('id',me.id).maybeSingle();perfil=data||{papel:'membro'};$('quem').textContent=NOME[perfil.papel];$('nv2').classList.toggle('hide',perfil.papel=='membro');mostrar('v1');
+const{data:m}=await sb.from('membros').select('*').eq('user_id',me.id).maybeSingle();if(m)preencher(m);if(perfil.papel!='membro')carregar()}
+sb.auth.onAuthStateChange((_e,s)=>sessao(s));
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script>
+</body>
+</html>
