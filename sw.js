@@ -1,3 +1,9 @@
-const C='imma-v1';
-self.addEventListener('install',e=>{e.waitUntil(caches.open(C).then(c=>c.addAll(['./','index.html','icon.svg'])));self.skipWaiting()});
-self.addEventListener('fetch',e=>{if(e.request.method!=='GET'||!e.request.url.startsWith(self.location.origin))return;e.respondWith(fetch(e.request).then(r=>{const k=r.clone();caches.open(C).then(c=>c.put(e.request,k));return r}).catch(()=>caches.match(e.request)))});
+const V='imma-v3';
+self.addEventListener('install',e=>{self.skipWaiting()});
+self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(n=>n!==V).map(n=>caches.delete(n)))).then(()=>self.clients.claim()))});
+self.addEventListener('fetch',e=>{
+  if(e.request.method!=='GET')return;
+  const u=new URL(e.request.url);
+  if(u.origin!==location.origin)return;
+  e.respondWith(fetch(e.request).then(r=>{const c=r.clone();caches.open(V).then(x=>x.put(e.request,c));return r}).catch(()=>caches.match(e.request)));
+});

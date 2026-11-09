@@ -71,10 +71,11 @@ document.querySelectorAll('#nav button').forEach(b=>b.onclick=()=>mostrar(b.data
 async function entrar(novo){const m=$('am');m.classList.remove('hide');const c={email:$('em').value.trim(),password:$('pw').value};const r=novo?await sb.auth.signUp(c):await sb.auth.signInWithPassword(c);m.textContent=r.error?r.error.message:(novo&&!r.data.session?'Conta criada. Confirme o email e depois entre.':'')}
 $('ent').onclick=()=>entrar(false);$('cri').onclick=()=>entrar(true);$('sair').onclick=()=>sb.auth.signOut();
 async function sessao(s){me=s?.user||null;['auth'].forEach(x=>$(x).classList.toggle('hide',!!me));$('nav').classList.toggle('hide',!me);$('sair').classList.toggle('hide',!me);if(!me){mostrar('');return}
+mostrar('v1');try{
 const{data}=await sb.from('perfis').select('*').eq('id',me.id).maybeSingle();perfil=data||{papel:'membro'};$('quem').textContent=NOME[perfil.papel];$('nv2').classList.toggle('hide',perfil.papel=='membro');mostrar('v1');
-const{data:m}=await sb.from('membros').select('*').eq('user_id',me.id).maybeSingle();if(m)preencher(m);if(perfil.papel!='membro')carregar()}
-sb.auth.onAuthStateChange((_e,s)=>sessao(s));
-if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+const{data:m}=await sb.from('membros').select('*').eq('user_id',me.id).maybeSingle();if(m)preencher(m);if(perfil.papel!='membro')carregar()}catch(err){const x=$('fm');x.classList.remove('hide');x.textContent='Erro ao carregar: '+(err.message||err)}}
+sb.auth.onAuthStateChange((_e,s)=>{setTimeout(()=>sessao(s),0)});
+if('serviceWorker' in navigator){let rec=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(rec)return;rec=true;location.reload()});navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{r.update();document.addEventListener('visibilitychange',()=>{if(!document.hidden)r.update()})}).catch(()=>{})}
 </script>
 </body>
 </html>
